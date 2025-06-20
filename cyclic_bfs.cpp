@@ -1,4 +1,3 @@
-
 #include <iostream>
 #include <cstring>
 using namespace std;
@@ -48,12 +47,14 @@ int dequeue() {
 void addEdge(int u, int v) {
     if (u >= 0 && u < vertices && v >= 0 && v < vertices) {
         adjacencyMatrix[u][v] = 1;
+    } else {
+        cout << "Invalid edge: (" << u << ", " << v << "). Vertices should be between 0 and " << vertices-1 << endl;
     }
 }
 
 // Function to display adjacency matrix
 void displayMatrix() {
-    cout << "Adjacency Matrix:" << endl;
+    cout << "\nAdjacency Matrix:" << endl;
     cout << "   ";
     for (int i = 0; i < vertices; i++) {
         cout << i << " ";
@@ -74,10 +75,15 @@ void displayList() {
     cout << "\nAdjacency List:" << endl;
     for (int i = 0; i < vertices; i++) {
         cout << i << ": ";
+        bool hasEdges = false;
         for (int j = 0; j < vertices; j++) {
             if (adjacencyMatrix[i][j] == 1) {
                 cout << j << " ";
+                hasEdges = true;
             }
+        }
+        if (!hasEdges) {
+            cout << "(no outgoing edges)";
         }
         cout << endl;
     }
@@ -95,6 +101,14 @@ void calculateInDegree() {
                 inDegree[j]++;
             }
         }
+    }
+}
+
+// Display in-degree information
+void displayInDegree() {
+    cout << "\nIn-degree of vertices:" << endl;
+    for (int i = 0; i < vertices; i++) {
+        cout << "Vertex " << i << ": " << inDegree[i] << endl;
     }
 }
 
@@ -141,11 +155,16 @@ bool detectCycleBFS() {
 }
 
 void printTopologicalOrder() {
-    cout << "Topological order: ";
-    for (int i = 0; i < topoSize; i++) {
-        cout << topologicalOrder[i] << " ";
+    if (topoSize > 0) {
+        cout << "Topological order: ";
+        for (int i = 0; i < topoSize; i++) {
+            cout << topologicalOrder[i];
+            if (i < topoSize - 1) {
+                cout << " -> ";
+            }
+        }
+        cout << endl;
     }
-    cout << endl;
 }
 
 // Function to print cycle vertices
@@ -191,66 +210,63 @@ void initGraph(int v) {
 }
 
 int main() {
-    cout << "=== Simple Cycle Detection using BFS  ===" << endl << endl;
+    cout << "=== Cycle Detection in Directed Graph using BFS (Kahn's Algorithm) ===" << endl << endl;
     
-    // Test Case 1: Graph with cycle
-    cout << "Test Case 1: Graph with cycle" << endl;
-    initGraph(4);
-    addEdge(0, 1);
-    addEdge(1, 2);
-    addEdge(2, 3);
-    addEdge(3, 1);  // Creates cycle: 1 -> 2 -> 3 -> 1
+    // Get number of vertices from user
+    cout << "Enter the number of vertices (1-" << MAX_VERTICES << "): ";
+    cin >> vertices;
     
+    if (vertices <= 0 || vertices > MAX_VERTICES) {
+        cout << "Invalid number of vertices. Exiting." << endl;
+        return 1;
+    }
+    
+    initGraph(vertices);
+    
+    // Get number of edges from user
+    int numEdges;
+    cout << "Enter the number of edges: ";
+    cin >> numEdges;
+    
+    if (numEdges < 0) {
+        cout << "Invalid number of edges. Exiting." << endl;
+        return 1;
+    }
+    
+    // Get edges from user
+    cout << "\nEnter edges (format: source destination):" << endl;
+    cout << "Vertices are numbered from 0 to " << vertices-1 << endl;
+    
+    for (int i = 0; i < numEdges; i++) {
+        int source, destination;
+        cout << "Edge " << i+1 << ": ";
+        cin >> source >> destination;
+        addEdge(source, destination);
+    }
+    
+    // Display the graph
+    cout << "\n=== Graph Representation ===" << endl;
     displayMatrix();
     displayList();
     
-    bool hasCycle1 = detectCycleBFS();
-    cout << "\nIs cyclic: " << (hasCycle1 ? "true" : "false") << endl;
-    if (hasCycle1) {
+    // Calculate and display in-degrees
+    calculateInDegree();
+    displayInDegree();
+    
+    // Detect cycle using BFS (Kahn's Algorithm)
+    cout << "\n=== Cycle Detection Result ===" << endl;
+    bool hasCycle = detectCycleBFS();
+    
+    if (hasCycle) {
+        cout << "Result: CYCLE DETECTED!" << endl;
         printCycleVertices();
         findCyclePath();
-    }
-    printTopologicalOrder();
-    cout << "----------------------------------------" << endl;
-    
-    // Test Case 2: Graph without cycle (DAG)
-    cout << "\nTest Case 2: Directed Acyclic Graph (DAG)" << endl;
-    initGraph(4);
-    addEdge(0, 1);
-    addEdge(1, 2);
-    addEdge(2, 3);
-    addEdge(0, 3);
-    
-    displayMatrix();
-    displayList();
-    
-    bool hasCycle2 = detectCycleBFS();
-    cout << "\nIs cyclic: " << (hasCycle2 ? "true" : "false") << endl;
-    if (hasCycle2) {
-        printCycleVertices();
+        cout << "Note: Topological ordering is not possible for cyclic graphs." << endl;
     } else {
-        cout << "No cycle found - This is a DAG" << endl;
+        cout << "Result: NO CYCLE FOUND" << endl;
+        cout << "This is a Directed Acyclic Graph (DAG)" << endl;
+        printTopologicalOrder();
     }
-    printTopologicalOrder();
-    cout << "----------------------------------------" << endl;
-    
-    // Test Case 3: Self-loop
-    cout << "\nTest Case 3: Graph with self-loop" << endl;
-    initGraph(3);
-    addEdge(0, 1);
-    addEdge(1, 1);  // Self-loop
-    addEdge(1, 2);
-    
-    displayMatrix();
-    displayList();
-    
-    bool hasCycle3 = detectCycleBFS();
-    cout << "\nIs cyclic: " << (hasCycle3 ? "true" : "false") << endl;
-    if (hasCycle3) {
-        printCycleVertices();
-        findCyclePath();
-    }
-    printTopologicalOrder();
     
     return 0;
 }
